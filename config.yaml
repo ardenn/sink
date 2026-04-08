@@ -1,0 +1,4 @@
+port: 8080
+upload_dir: "./uploads"
+auth_token: "secret-token-change-me"
+max_file_size_mb: 50
