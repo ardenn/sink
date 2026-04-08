@@ -80,10 +80,10 @@ A common approach is to create the directory on the host and ensure it's writabl
 
 ```bash
 # Example: Mounting a volume
-mkdir -p ./my-uploads
-chmod 777 ./my-uploads # (Adjust for your specific security needs)
+mkdir -p ./appdata/uploads
+chmod 777 ./appdata/uploads # (Adjust for your specific security needs)
 
-docker run -p 8080:8080 -v $(pwd)/my-uploads:/app/uploads -d --name sink sink
+docker run -p 8080:8080 -v $(pwd)/appdata/uploads:/appdata/uploads -d --name sink sink
 ```
 
 ### 3. Running with Docker Compose
@@ -97,12 +97,12 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./my-uploads:/app/uploads
-      - ./config.yaml:/app/config.yaml # Optional: Mount custom config
+      - ./appdata/uploads:/appdata/uploads
+      - ./app:/app # Mount the app/ directory instead of config.yaml directly
     restart: unless-stopped
 ```
 
-Ensure the `./my-uploads` directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
+Ensure the `./appdata/uploads` directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
 
 ```bash
 docker compose up -d
