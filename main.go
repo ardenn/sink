@@ -14,9 +14,9 @@ import (
 
 type Config struct {
 	Port        int    `yaml:"port"`
-	UploadDir   string `yaml:"upload_dir"`
-	AuthToken   string `yaml:"auth_token"`
-	MaxFileSize int64  `yaml:"max_file_size_mb"`
+	UploadDir   string `yaml:"uploadDir"`
+	AuthToken   string `yaml:"authToken"`
+	MaxFileSize int64  `yaml:"maxFileSizeMb"`
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -118,7 +118,7 @@ func main() {
 	}
 
 	if cfg.AuthToken == "" {
-		log.Println("WARNING: auth_token is empty! Requests will be unauthorized unless configured.")
+		log.Println("WARNING: authToken is empty! Requests will be unauthorized unless configured.")
 	}
 
 	// Ensure upload directory exists
