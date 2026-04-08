@@ -14,7 +14,7 @@ Sink is a simple, secure, and fast file upload service written in Go. It exposes
 
 ## Configuration
 
-Sink uses a `config.yaml` file for configuration. By default, it looks for `config.yaml` in the current directory. You can override this location by setting the `CONFIG_PATH` environment variable.
+Sink uses a `config.yaml` file for configuration. By default, it looks for `/app/config.yaml` when running in a container. You can override this location by setting the `CONFIG_PATH` environment variable pointing to a location from the container's perspective (if running in a container), or to a path accessible to the binary executable.
 
 ```yaml
 port: 8080
@@ -102,7 +102,7 @@ services:
     restart: unless-stopped
 ```
 
-Ensure the `./appdata/uploads` directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
+Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
 
 ```bash
 docker compose up -d

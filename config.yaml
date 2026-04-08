@@ -1,4 +1,4 @@
 port: 8080
-uploadDir: "./uploads"
+uploadDir: "/appdata/uploads"
 authToken: "secret-token-change-me"
 maxFileSizeMb: 50

@@ -27,6 +27,11 @@ func loadConfig(path string) (*Config, error) {
 		MaxFileSize: 10,
 	}
 
+	if path == "" {
+		log.Printf("CONFIG_PATH not set, using defaults")
+		return cfg, nil
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -107,9 +112,9 @@ func uploadHandler(cfg *Config) http.HandlerFunc {
 }
 
 func main() {
-	configPath := "config.yaml"
-	if envPath := os.Getenv("CONFIG_PATH"); envPath != "" {
-		configPath = envPath
+	configPath := "/app/config.yaml"
+	if p := os.Getenv("CONFIG_PATH"); p != "" {
+		configPath = p
 	}
 
 	cfg, err := loadConfig(configPath)
