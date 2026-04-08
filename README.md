@@ -86,6 +86,28 @@ chmod 777 ./my-uploads # (Adjust for your specific security needs)
 docker run -p 8080:8080 -v $(pwd)/my-uploads:/app/uploads -d --name sink sink
 ```
 
+### 3. Running with Docker Compose
+
+You can also use Docker Compose to manage and run the service using the prebuilt image from the GitHub Container Registry. Create a `docker-compose.yml` file with the following configuration:
+
+```yaml
+services:
+  sink:
+    image: ghcr.io/ardenn/sink:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./my-uploads:/app/uploads
+      - ./config.yaml:/app/config.yaml # Optional: Mount custom config
+    restart: unless-stopped
+```
+
+Ensure the `./my-uploads` directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
+
+```bash
+docker compose up -d
+```
+
 ## Usage
 
 To upload a file, send a `POST` request to the `/upload` endpoint with the file included as `multipart/form-data` under the `file` field. Include your configured `authToken` in the `X-Auth-Token` header.
