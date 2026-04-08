@@ -2,24 +2,49 @@ name: Publish to GHCR
 
 on:
   push:
-    tags:
-      - 'v*' # Triggers on tags like v0.0.1, v1.0.0, etc.
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
-  # github.repository is the <owner>/<repo> format
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # Required to create tags and GitHub Releases
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch history to check for existing tags
+
+      - name: Read Version
+        id: get_version
+        run: |
+          VERSION=$(cat VERSION | tr -d '\n' | tr -d '\r')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version is $VERSION"
+
+      - name: Create Git Tag
+        id: create_tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v${{ steps.get_version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping tag creation."
+            echo "new_tag=false" >> $GITHUB_OUTPUT
+          else
+            echo "Creating and pushing tag $TAG"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "new_tag=true" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,9 +62,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=${{ steps.get_version.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -50,3 +74,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Create GitHub Release
+        if: steps.create_tag.outputs.new_tag == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag }}
+          name: Release ${{ steps.create_tag.outputs.tag }}
+          generate_release_notes: true
