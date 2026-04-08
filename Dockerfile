@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22-alpine AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build a statically linked binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o upload-service main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o sink main.go
 
 # Run stage
 FROM alpine:latest
@@ -22,7 +22,7 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copy the binary and config from the builder
-COPY --from=builder /app/upload-service /app/upload-service
+COPY --from=builder /app/sink /app/sink
 COPY config.yaml /app/config.yaml
 
 # Create the uploads directory and configure permissions
@@ -36,4 +36,4 @@ USER appuser
 EXPOSE 8080
 
 # Run the binary
-ENTRYPOINT ["/app/upload-service"]
+ENTRYPOINT ["/app/sink"]
