@@ -14,7 +14,7 @@ Sink is a simple, secure, and fast file upload service written in Go. It exposes
 
 ## Configuration
 
-Sink uses a `config.yaml` file for configuration. By default, it looks for `config.yaml` in the current directory. You can override this location by setting the `CONFIG_PATH` environment variable.
+Sink uses a `config.yaml` file for configuration. By default, it looks for `/app/config.yaml` when running in a container. You can override this location by setting the `CONFIG_PATH` environment variable pointing to a location from the container's perspective (if running in a container), or to a path accessible to the binary executable.
 
 ```yaml
 port: 8080
@@ -80,10 +80,32 @@ A common approach is to create the directory on the host and ensure it's writabl
 
 ```bash
 # Example: Mounting a volume
-mkdir -p ./my-uploads
-chmod 777 ./my-uploads # (Adjust for your specific security needs)
+mkdir -p ./appdata/uploads
+chmod 777 ./appdata/uploads # (Adjust for your specific security needs)
 
-docker run -p 8080:8080 -v $(pwd)/my-uploads:/app/uploads -d --name sink sink
+docker run -p 8080:8080 -v $(pwd)/appdata/uploads:/appdata/uploads -d --name sink sink
+```
+
+### 3. Running with Docker Compose
+
+You can also use Docker Compose to manage and run the service using the prebuilt image from the GitHub Container Registry. Create a `docker-compose.yml` file with the following configuration:
+
+```yaml
+services:
+  sink:
+    image: ghcr.io/ardenn/sink:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./appdata/uploads:/appdata/uploads
+      - ./app:/app # Mount the app/ directory instead of config.yaml directly
+    restart: unless-stopped
+```
+
+Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
+
+```bash
+docker compose up -d
 ```
 
 ## Usage
