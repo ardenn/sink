@@ -8,7 +8,7 @@ echo "Starting with UID: $USER_ID, GID: $GROUP_ID"
 
 # Update the appuser's UID and GID to match the env vars
 # We use shadow (usermod/groupmod) or modify /etc/passwd manually if shadow is missing
-if [ "$(id -u appuser)" -ne "$USER_ID" ] || [ "$(id -g appuser)" -ne "$GROUP_ID" ]; then
+if [ $(id -u appuser) -ne $USER_ID ]; then
     # Handle alpine specifically (which uses usermod/groupmod from the 'shadow' package)
     # You might need to install 'shadow' in your Dockerfile
     usermod -u $USER_ID -o appuser
