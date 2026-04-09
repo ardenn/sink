@@ -1,39 +1,43 @@
-# Build stage
-FROM golang:alpine AS builder
+##################################
+# STEP 1 build executable binary
+#################################
+FROM --platform=linux/amd64 golang:1.26.0-alpine as builder
 
-WORKDIR /app
+ENV USER=appuser
+ENV UID=1000
 
-# Install dependencies first (leverage Docker cache)
-COPY go.mod go.sum ./
+# See https://stackoverflow.com/a/55757473/12429735RUN
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    "${USER}"
+
+WORKDIR /src/app
+COPY go.* ./
+
 RUN go mod download
+RUN go mod verify
 
-# Copy the rest of the source code
 COPY . .
 
-# Build a statically linked binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o sink main.go
+# Build the binary.
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/sink main.go
 
-# Run stage
+#############################
+# STEP 2 build a small image
+#############################
 FROM alpine:latest
 
-WORKDIR /app
+RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
 
-# Create a non-root user and group
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+COPY --from=builder /go/bin/sink /go/bin/sink
 
-# Copy the binary and config from the builder
-COPY --from=builder /app/sink /app/sink
-COPY config.yaml /app/config.yaml
-
-# Create the uploads directory and configure permissions
-RUN mkdir -p /app/uploads && \
-    chown -R appuser:appgroup /app
-
-# Switch to the non-root user
-USER appuser
-
-# Expose the port the app runs on
+USER ${USER}:${USER}
 EXPOSE 8080
-
-# Run the binary
-ENTRYPOINT ["/app/sink"]
+ENTRYPOINT ["/go/bin/sink"]
