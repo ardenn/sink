@@ -74,18 +74,14 @@ A `Dockerfile` is provided to run the service in a lightweight, secure container
     ```
 
 **Important Note on Container Volumes:** 
-The container starts as the root user, which is used to set permissions on the file system before dropping its privileges and starting the main process. This is done for convenience, while still running the main binary as non-root.
-Make sure that the mounted host volumes at `/app` and `/appdata` are readable/ writable by the user as which the container runs.
-For example, if running the container as user 1000 and group 1000, use a command similar to this to change the owner of the data folder:
+If you want to persist the uploaded files outside of the container, you should mount a volume. Because the container runs as a non-root user, you may encounter permission denied errors if the mounted host directory does not allow the container user to write to it.
+
+A common approach is to create the directory on the host and ensure it's writable by the container user (e.g., using `chmod` or `chown`, or letting Docker create it if it has the right permissions).
 
 ```bash
-# Set the owner to user 1000 and group 1000
-chown -R 1000:1000 ./appdata
-chown -R 1000:1000 ./app
-
 # Example: Mounting a volume
 mkdir -p ./appdata/uploads
-chmod 777 ./appdata/uploads # (Adjust for your specific security needs)
+chmod 775 ./appdata/uploads # Or adjust to a more restrictive permission as needed
 
 docker run -p 8080:8080 -v $(pwd)/appdata/uploads:/appdata/uploads -d --name sink sink
 ```
@@ -103,13 +99,11 @@ services:
     volumes:
       - ./appdata/uploads:/appdata/uploads
       - ./app:/app # Mount the app/ directory instead of config.yaml directly
-    environment:
-      - UID=1000   # Your host UID
-      - GID=1000   # Your host GID
+    userns_mode: keep-id # Fixes permission issues in rootless Podman
     restart: unless-stopped
 ```
 
-Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. Setting the `UID` and `GID` environment variables to match your host user can help prevent permission issues with mounted volumes, especially when running with rootless Podman. Then, start the service in the background:
+Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. The `userns_mode: keep-id` setting ensures the container user matches your host user, preventing permission issues with mounted volumes when running with rootless Podman. Then, start the service in the background:
 
 ```bash
 docker compose up -d

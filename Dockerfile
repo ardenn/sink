@@ -19,24 +19,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 #############################
 FROM alpine:latest
 
-# Install dependencies for user modification
-RUN apk add --no-cache su-exec shadow ca-certificates tzdata
-
-# Create the user (default 1000)
-RUN adduser -D -u 1000 appuser && \
-    mkdir -p /app /appdata/uploads && \
-    chown -R appuser:appuser /app /appdata
-
 WORKDIR /app
 COPY --from=builder /go/bin/sink /go/bin/sink
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Make the script executable
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Create a non-root user and switch to it
+RUN adduser -D appuser
+USER appuser
 
-# IMPORTANT: We must start as ROOT so we have permission to change UIDs
-# The entrypoint script will drop privileges later.
-USER root
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/go/bin/sink"]
+ENTRYPOINT ["/go/bin/sink"]
