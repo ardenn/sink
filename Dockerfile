@@ -19,7 +19,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 #############################
 FROM alpine:latest
 
-RUN apk update && apk add --no-cache ca-certificates tzdata && update-ca-certificates
+RUN apk add --no-cache ca-certificates tzdata && update-ca-certificates
+
+# Create a non-root user and set up the application directory
+RUN adduser -D appuser && mkdir /app && chown appuser:appuser /app
+WORKDIR /app
 
 # Default uploads directory should be created here
 WORKDIR /app
@@ -27,6 +31,5 @@ USER appuser:appuser
 
 COPY --from=builder /go/bin/sink /go/bin/sink
 
-USER ${USER}:${USER}
 EXPOSE 8080
 ENTRYPOINT ["/go/bin/sink"]
