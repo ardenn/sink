@@ -1,7 +1,7 @@
 ##################################
 # STEP 1 build executable binary
 #################################
-FROM --platform=linux/amd64 golang:1.26.0-alpine as builder
+FROM golang:1.26.0-alpine AS builder
 
 ENV USER=appuser
 ENV UID=1000
@@ -25,7 +25,7 @@ RUN go mod verify
 COPY . .
 
 # Build the binary.
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/sink main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 
 #############################
 # STEP 2 build a small image
