@@ -19,18 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 #############################
 FROM alpine:latest
 
-# Install dependencies
-RUN apk add --no-cache ca-certificates tzdata
-
-# Create the user (default 1000)
-RUN adduser -D -u 1000 appuser && \
-    mkdir -p /app /appdata/uploads && \
-    chown -R appuser:appuser /app /appdata
-
 WORKDIR /app
-COPY --from=builder /go/bin/sink /usr/local/bin/sink
+COPY --from=builder /go/bin/sink /go/bin/sink
 
-# Switch to the non-root user
-USER appuser
-
-ENTRYPOINT ["/usr/local/bin/sink"]
+ENTRYPOINT ["/go/bin/sink"]
