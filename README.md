@@ -81,7 +81,7 @@ A common approach is to create the directory on the host and ensure it's writabl
 ```bash
 # Example: Mounting a volume
 mkdir -p ./appdata/uploads
-chmod 777 ./appdata/uploads # (Adjust for your specific security needs)
+chmod 775 ./appdata/uploads # Or adjust to a more restrictive permission as needed
 
 docker run -p 8080:8080 -v $(pwd)/appdata/uploads:/appdata/uploads -d --name sink sink
 ```
