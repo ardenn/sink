@@ -99,10 +99,13 @@ services:
     volumes:
       - ./appdata/uploads:/appdata/uploads
       - ./app:/app # Mount the app/ directory instead of config.yaml directly
+    environment:
+      - UID=1000   # Your host UID
+      - GID=1000   # Your host GID
     restart: unless-stopped
 ```
 
-Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. Then, start the service in the background:
+Ensure the `./appdata/uploads` (or whatever it's set to on the host) directory exists and has the appropriate permissions as mentioned above. Setting the `UID` and `GID` environment variables to match your host user can help prevent permission issues with mounted volumes, especially when running with rootless Podman. Then, start the service in the background:
 
 ```bash
 docker compose up -d
