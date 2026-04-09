@@ -74,11 +74,15 @@ A `Dockerfile` is provided to run the service in a lightweight, secure container
     ```
 
 **Important Note on Container Volumes:** 
-If you want to persist the uploaded files outside of the container, you should mount a volume. Because the container runs as a non-root user (UID/GID are created dynamically by `adduser`), you may encounter permission denied errors if the mounted host directory does not allow the container user to write to it.
-
-A common approach is to create the directory on the host and ensure it's writable by the container user (e.g., using `chmod` or `chown`, or letting Docker create it if it has the right permissions).
+The container starts as the root user, which is used to set permissions on the file system before dropping its privileges and starting the main process. This is done for convenience, while still running the main binary as non-root.
+Make sure that the mounted host volumes at `/app` and `/appdata` are readable/ writable by the user as which the container runs.
+For example, if running the container as user 1000 and group 1000, use a command similar to this to change the owner of the data folder:
 
 ```bash
+# Set the owner to user 1000 and group 1000
+chown -R 1000:1000 ./appdata
+chown -R 1000:1000 ./app
+
 # Example: Mounting a volume
 mkdir -p ./appdata/uploads
 chmod 777 ./appdata/uploads # (Adjust for your specific security needs)
