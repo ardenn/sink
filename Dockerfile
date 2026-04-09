@@ -1,20 +1,7 @@
 ##################################
 # STEP 1 build executable binary
 #################################
-FROM --platform=linux/amd64 golang:1.26.0-alpine as builder
-
-ENV USER=appuser
-ENV UID=1000
-
-# See https://stackoverflow.com/a/55757473/12429735RUN
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    "${USER}"
+FROM golang:1.26.0-alpine AS builder
 
 WORKDIR /src/app
 COPY go.* ./
@@ -25,19 +12,24 @@ RUN go mod verify
 COPY . .
 
 # Build the binary.
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/sink main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 
 #############################
 # STEP 2 build a small image
 #############################
 FROM alpine:latest
 
-RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+RUN apk add --no-cache ca-certificates tzdata && update-ca-certificates
 
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+# Create a non-root user and set up the application directory
+RUN adduser -D appuser && mkdir /app && chown appuser:appuser /app
+WORKDIR /app
+
+# Default uploads directory should be created here
+WORKDIR /app
+USER appuser:appuser
+
 COPY --from=builder /go/bin/sink /go/bin/sink
 
-USER ${USER}:${USER}
 EXPOSE 8080
 ENTRYPOINT ["/go/bin/sink"]
