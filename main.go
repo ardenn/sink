@@ -123,7 +123,7 @@ func main() {
 	}
 
 	if cfg.AuthToken == "" {
-		log.Println("WARNING: authToken is empty! Requests will be unauthorized unless configured.")
+		log.Println("WARNING: authToken is empty! Requests will be unauthorised unless configured.")
 	}
 
 	// Ensure upload directory exists
