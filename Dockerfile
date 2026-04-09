@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sink main.go
 #############################
 FROM alpine:latest
 
-RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-certificates
+RUN apk update && apk add --no-cache ca-certificates tzdata && update-ca-certificates
 
 # Default uploads directory should be created here
 WORKDIR /app
