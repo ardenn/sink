@@ -22,4 +22,8 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /go/bin/sink /go/bin/sink
 
+# Create a non-root user and switch to it
+RUN adduser -D appuser
+USER appuser
+
 ENTRYPOINT ["/go/bin/sink"]
